@@ -83,28 +83,59 @@ public class NPCNavigationAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        // moving objects by adding force
         int movement = actionBuffers.DiscreteActions[0];
-        switch (movement)
-        {
-            case 1:
-                moveVec = -transform.right;
-                break;
-            case 2:
-                moveVec = transform.right;
-                break;
-            case 3:
-                moveVec = -transform.forward;
-                break;
-            case 4:
-                moveVec = transform.forward;
-                break;
-            default:
-                moveVec = Vector3.zero;
-                break;
+
+        float directionX = 0, directionZ = 0, directionY = 0;
+
+        // Look up the index in the movement action list:
+        if (movement == 0) { }
+        if (movement == 1) { directionX = -1; }
+        if (movement == 2) { directionX = 1; }
+        if (movement == 3) { directionZ = -1; }
+        if (movement == 4) { directionZ = 1; }
+
+        moveVec = new Vector3(directionX, directionY, directionZ);
+        // Store the current position of the agent
+        Vector3 prevPos = transform.position;
+        prevDistanceToWaypoint = Vector3.Distance(prevPos, waypoints[currentWaypointIndex].position);
+        // Debug.Log("Prev Distance to waypoint: " + prevDistanceToWaypoint);
+        // Apply the movement to the agent
+        //transform.Translate(moveVec * moveSpeed * Time.deltaTime);
+        body.AddForce(moveVec * moveSpeed, ForceMode.VelocityChange);
+        // Calculate distance to the current waypoint
+        distanceToWaypoint = Vector3.Distance(transform.position, waypoints[currentWaypointIndex].position);
+        Debug.Log("Move distance: " + Vector3.Distance(prevPos, transform.position));
+        // Reward for getting closer to the current waypoint
+        if (reward >= 0){
+            reward = 2*(prevDistanceToWaypoint - distanceToWaypoint);
+        }else{
+            reward = 4*(prevDistanceToWaypoint - distanceToWaypoint);
         }
-        body.AddForce(moveVec * moveSpeed, ForceMode.Impulse);
- 
+        AddScore(reward);
+        // Small penalty for each step
+        AddScore(-0.0001f);
+        // If the agent reaches the current waypoint
+        if (distanceToWaypoint < 0.5f)
+        {
+            AddScore(200f);  // Small reward for reaching the waypoint
+            //Debug.Log("+" + 200f);
+            currentWaypointIndex++;
+
+            // If all waypoints are reached, end the episode
+            if (currentWaypointIndex == waypoints.Length)
+            {
+                AddScore(1000f);  // Large reward for reaching the final target
+                //Debug.Log("+" + 1000f);
+                
+                EndTheEpisode();
+            }
+        }
+        steps++;
+        if (steps >= MaxStep)
+        {
+            EndTheEpisode();
+            //Debug.Log("Failed");
+        }
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
