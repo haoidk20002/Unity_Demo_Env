@@ -2785,7 +2785,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5571225866648345758, guid: d0b4cd4f4e98c87458123df319f52c4a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -16.74
+      value: -16.71
       objectReference: {fileID: 0}
     - target: {fileID: 5571225866648345758, guid: d0b4cd4f4e98c87458123df319f52c4a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2793,7 +2793,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5571225866648345758, guid: d0b4cd4f4e98c87458123df319f52c4a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 44.65
+      value: 44.57
       objectReference: {fileID: 0}
     - target: {fileID: 5571225866648345758, guid: d0b4cd4f4e98c87458123df319f52c4a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3685,11 +3685,15 @@ PrefabInstance:
       objectReference: {fileID: 1140198189}
     - target: {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: MaxStep
-      value: 2000
+      value: 10000
       objectReference: {fileID: 0}
     - target: {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: moveSpeed
-      value: 10
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
+      propertyPath: TriggeringDistance
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: waypoints.Array.size
@@ -3773,11 +3777,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3702249416862621898, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: m_BrainParameters.VectorActionSize.Array.data[0]
-      value: 9
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3702249416862621898, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: m_BrainParameters.m_ActionSpec.BranchSizes.Array.data[0]
-      value: 9
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3938196992552610339, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: m_LocalScale.x
@@ -3840,10 +3844,16 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8895525863724460024, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
+      propertyPath: m_IsKinematic
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8895525863724460024, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: m_CollisionDetection
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3702249416862621898, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
+    - {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

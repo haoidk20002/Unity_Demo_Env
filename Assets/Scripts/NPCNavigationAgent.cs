@@ -14,6 +14,7 @@ public class NPCNavigationAgent : Agent
     public Transform[] waypoints; // Array to hold waypoint references
     private int currentWaypointIndex = 0;  // Index to track the current waypoint
     private float distanceToWaypoint, prevDistanceToWaypoint;
+    public float TriggeringDistance;
     private Vector3 moveVec;
     private float rayDistance = 1.5f;
     private float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f };
@@ -41,6 +42,18 @@ public class NPCNavigationAgent : Agent
         AddReward(point);
         ScoreManaging.Instance.score += point;
         ScoreManaging.Instance.reward = point;
+    }
+    private void DistanceReward()
+    {
+        if (reward >= 0)
+        {
+            reward = 2 * (prevDistanceToWaypoint - distanceToWaypoint);
+        }
+        else
+        {
+            reward = 4 * (prevDistanceToWaypoint - distanceToWaypoint);
+        }
+        AddScore(reward);
     }
 
     public override void OnEpisodeBegin()
@@ -83,39 +96,24 @@ public class NPCNavigationAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
+        AddScore(-0.0001f);  // Small penalty for each step
         int movement = actionBuffers.DiscreteActions[0];
-
-        float directionX = 0, directionZ = 0, directionY = 0;
-
-        // Look up the index in the movement action list:
-        if (movement == 0) { }
-        if (movement == 1) { directionX = -1; }
-        if (movement == 2) { directionX = 1; }
-        if (movement == 3) { directionZ = -1; }
-        if (movement == 4) { directionZ = 1; }
-
-        moveVec = new Vector3(directionX, directionY, directionZ);
-        // Store the current position of the agent
-        Vector3 prevPos = transform.position;
-        prevDistanceToWaypoint = Vector3.Distance(prevPos, waypoints[currentWaypointIndex].position);
-        // Debug.Log("Prev Distance to waypoint: " + prevDistanceToWaypoint);
+        // Calculate the movement vector based on the action
+        Vector3 moveVec = movement switch
+        {
+            1 => new Vector3(-1, 0, 0),
+            2 => new Vector3(1, 0, 0),
+            3 => new Vector3(0, 0, -1),
+            4 => new Vector3(0, 0, 1),
+            _ => Vector3.zero
+        };
         // Apply the movement to the agent
-        //transform.Translate(moveVec * moveSpeed * Time.deltaTime);
-        body.AddForce(moveVec * moveSpeed, ForceMode.VelocityChange);
+        body.AddForce(moveVec * moveSpeed, ForceMode.Impulse);
         // Calculate distance to the current waypoint
         distanceToWaypoint = Vector3.Distance(transform.position, waypoints[currentWaypointIndex].position);
-        Debug.Log("Move distance: " + Vector3.Distance(prevPos, transform.position));
         // Reward for getting closer to the current waypoint
-        if (reward >= 0){
-            reward = 2*(prevDistanceToWaypoint - distanceToWaypoint);
-        }else{
-            reward = 4*(prevDistanceToWaypoint - distanceToWaypoint);
-        }
-        AddScore(reward);
-        // Small penalty for each step
-        AddScore(-0.0001f);
-        // If the agent reaches the current waypoint
-        if (distanceToWaypoint < 0.5f)
+        DistanceReward();
+        if (distanceToWaypoint < TriggeringDistance)
         {
             AddScore(200f);  // Small reward for reaching the waypoint
             //Debug.Log("+" + 200f);
@@ -125,17 +123,18 @@ public class NPCNavigationAgent : Agent
             if (currentWaypointIndex == waypoints.Length)
             {
                 AddScore(1000f);  // Large reward for reaching the final target
-                //Debug.Log("+" + 1000f);
-                
+                                  //Debug.Log("+" + 1000f);
+
                 EndTheEpisode();
             }
         }
-        steps++;
-        if (steps >= MaxStep)
-        {
-            EndTheEpisode();
-            //Debug.Log("Failed");
-        }
+        // steps++;
+        // if (steps >= MaxStep)
+        // {
+        //     EndTheEpisode();
+        //     //Debug.Log("Failed");
+        // }
+        prevDistanceToWaypoint = distanceToWaypoint;
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -148,23 +147,15 @@ public class NPCNavigationAgent : Agent
         else if (Input.GetKey(KeyCode.UpArrow)) { discreteActionsOut[0] = 4; }
         else { discreteActionsOut[0] = 0; }
     }
-    private void OnCollisionEnter(Collision collision)
+    private void OnDrawGizmos()
     {
-        if (collision.gameObject.CompareTag("Obstacle"))
+        Gizmos.color = Color.green;
+
+        // Draw raycasts in each direction
+        foreach (float angle in rayAngles)
         {
-            //Debug.Log("Hit Obstacle");
-            AddScore(-10f); // Negative reward for hitting obstacles
+            Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward;
+            Gizmos.DrawRay(transform.position, direction * rayDistance);
         }
     }
-    private void OnDrawGizmos()
-{
-    Gizmos.color = Color.green;
-
-    // Draw raycasts in each direction
-    foreach (float angle in rayAngles)
-    {
-        Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward;
-        Gizmos.DrawRay(transform.position, direction * rayDistance);
-    }
-}
 }

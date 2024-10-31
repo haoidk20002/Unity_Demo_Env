@@ -2,7 +2,7 @@
   "dependencies": {
     "com.unity.collab-proxy": "2.4.4",
     "com.unity.feature.development": "1.0.1",
-    "com.unity.ml-agents": "file:D:/4th year/ml-agents/com.unity.ml-agents",
+    "com.unity.ml-agents": "file:D:/Bachelor Program/4th year/Thesis Project/ml-agents-develop/ml-agents-develop/com.unity.ml-agents",
     "com.unity.textmeshpro": "3.0.6",
     "com.unity.timeline": "1.7.5",
     "com.unity.ugui": "1.0.0",
