@@ -2785,7 +2785,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5571225866648345758, guid: d0b4cd4f4e98c87458123df319f52c4a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -16.71
+      value: -16.7
       objectReference: {fileID: 0}
     - target: {fileID: 5571225866648345758, guid: d0b4cd4f4e98c87458123df319f52c4a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3685,11 +3685,11 @@ PrefabInstance:
       objectReference: {fileID: 1140198189}
     - target: {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: MaxStep
-      value: 10000
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: moveSpeed
-      value: 2
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 1705402160692896934, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: TriggeringDistance
@@ -3837,7 +3837,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8706377465681511373, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: DecisionPeriod
-      value: 2
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 8706377465681511373, guid: 2865deed16e67c04cb635e4fd6f60019, type: 3}
       propertyPath: TakeActionsBetweenDecisions

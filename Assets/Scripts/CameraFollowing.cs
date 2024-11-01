@@ -9,15 +9,19 @@ public class CameraFollowing : MonoBehaviour
     public int positionDifference;
     private Camera mainCamera;
     private Vector3 desiredLocalLocation;
-    private Vector3 desiredLocation;
+    private Vector3 desiredLocation, orginalLocation;
     
     private void Awake()
     {
         mainCamera = Camera.main;
         desiredLocation = transform.position;
+        orginalLocation = transform.position;
     }
     private void Update()
     {
+        if (main.position == orginalLocation){
+            transform.position = orginalLocation;
+        }
         desiredLocation.z = main.position.z;
     }
     private void MoveCamera()

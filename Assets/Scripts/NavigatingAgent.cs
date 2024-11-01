@@ -4,7 +4,7 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 
 
-public class NPCNavigationAgent : Agent
+public class NavigatingAgent : Agent
 {
     public Transform target;
     [SerializeField] private float moveSpeed;
@@ -27,6 +27,7 @@ public class NPCNavigationAgent : Agent
     }
     private void EndTheEpisode()
     {
+        body.velocity = Vector3.zero;
         currentWaypointIndex = 0;
         EndEpisode();
     }
@@ -38,9 +39,12 @@ public class NPCNavigationAgent : Agent
     }
     private void AddScore(float point)
     {
-
         AddReward(point);
         ScoreManaging.Instance.score += point;
+        if(ScoreManaging.Instance.score < 0){
+            //.Log("Score is negative, setting it to 0");
+            ScoreManaging.Instance.score = Mathf.Clamp(ScoreManaging.Instance.score, 0f, 10000000f);
+        }
         ScoreManaging.Instance.reward = point;
     }
     private void DistanceReward()
@@ -51,11 +55,10 @@ public class NPCNavigationAgent : Agent
         }
         else
         {
-            reward = 4 * (prevDistanceToWaypoint - distanceToWaypoint);
+            reward = 5 * (prevDistanceToWaypoint - distanceToWaypoint);
         }
         AddScore(reward);
     }
-
     public override void OnEpisodeBegin()
     {
         // Reset the NPC's position at the beginning of each episode
@@ -96,10 +99,10 @@ public class NPCNavigationAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        AddScore(-0.0001f);  // Small penalty for each step
+        AddScore(-1f);  // Small penalty for each step
         int movement = actionBuffers.DiscreteActions[0];
         // Calculate the movement vector based on the action
-        Vector3 moveVec = movement switch
+        moveVec = movement switch
         {
             1 => new Vector3(-1, 0, 0),
             2 => new Vector3(1, 0, 0),
@@ -107,12 +110,17 @@ public class NPCNavigationAgent : Agent
             4 => new Vector3(0, 0, 1),
             _ => Vector3.zero
         };
-        // Apply the movement to the agent
-        body.AddForce(moveVec * moveSpeed, ForceMode.Impulse);
+        // Apply the force to the agent, the movement takes effects in the next step
+        body.velocity = Vector3.zero;
+        body.AddForce(moveVec * moveSpeed, ForceMode.VelocityChange);
         // Calculate distance to the current waypoint
         distanceToWaypoint = Vector3.Distance(transform.position, waypoints[currentWaypointIndex].position);
-        // Reward for getting closer to the current waypoint
-        DistanceReward();
+        //
+        // The distanceToWaypoint is calculated before the previousDistanceToWaypoint is updated, so at first step the score is improperly calculated
+        // we don't want to calculate the reward at the first step
+        if (StepCount != 1){
+            DistanceReward();
+        }
         if (distanceToWaypoint < TriggeringDistance)
         {
             AddScore(200f);  // Small reward for reaching the waypoint
@@ -128,12 +136,6 @@ public class NPCNavigationAgent : Agent
                 EndTheEpisode();
             }
         }
-        // steps++;
-        // if (steps >= MaxStep)
-        // {
-        //     EndTheEpisode();
-        //     //Debug.Log("Failed");
-        // }
         prevDistanceToWaypoint = distanceToWaypoint;
     }
 
