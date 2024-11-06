@@ -4,6 +4,7 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 
 
+
 public class NavigatingAgent : Agent
 {
     public Transform target;
@@ -15,15 +16,28 @@ public class NavigatingAgent : Agent
     private int currentWaypointIndex = 0;  // Index to track the current waypoint
     private float distanceToWaypoint, prevDistanceToWaypoint;
     public float TriggeringDistance;
-    private Vector3 moveVec;
+    private Vector3 moveVec, currentPos, targetPos, initialPos;
     private float rayDistance = 1.5f;
     private float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f };
     private Rigidbody body;
+    private Vector3 initialDirectionVector, directionVector;
     public override void Initialize()
     {
         // Store the original position of the NPC
-        originalLocation = transform.localPosition;
+        originalLocation = transform.position;
         body = GetComponent<Rigidbody>();
+    }
+    public override void OnEpisodeBegin()
+    {
+        // Reset the NPC's position at the beginning of each episode
+        moveVec = Vector3.zero;
+        transform.position = originalLocation;
+        initialPos = transform.position;
+        targetPos = waypoints[currentWaypointIndex].position;
+        initialDirectionVector = initialPos - targetPos;
+        steps = 0;
+        ScoreManaging.Instance.score = 0f;
+        SetScrore(0f);
     }
     private void EndTheEpisode()
     {
@@ -41,7 +55,8 @@ public class NavigatingAgent : Agent
     {
         AddReward(point);
         ScoreManaging.Instance.score += point;
-        if(ScoreManaging.Instance.score < 0){
+        if (ScoreManaging.Instance.score < 0)
+        {
             //.Log("Score is negative, setting it to 0");
             ScoreManaging.Instance.score = Mathf.Clamp(ScoreManaging.Instance.score, 0f, 10000000f);
         }
@@ -59,15 +74,38 @@ public class NavigatingAgent : Agent
         }
         AddScore(reward);
     }
-    public override void OnEpisodeBegin()
+    private void CheckTriggering()
     {
-        // Reset the NPC's position at the beginning of each episode
-        moveVec = Vector3.zero;
-        transform.localPosition = originalLocation;
-        steps = 0;
-        ScoreManaging.Instance.score = 0f;
-        SetScrore(0f);
+        if (currentWaypointIndex < waypoints.Length)
+        {
+            directionVector = currentPos - targetPos;
+            float dotProduct = Vector3.Dot(initialDirectionVector, directionVector);
+            if (dotProduct < 0)
+            {
+                AddScore(250f);
+                Debug.Log("Reached the waypoint");
+                currentWaypointIndex++;
+                if (currentWaypointIndex < waypoints.Length){
+                    targetPos = waypoints[currentWaypointIndex].position;
+                    initialDirectionVector = currentPos - targetPos;
+                } else {
+                    targetPos = target.position; // Red Cube Position
+                }
+            }
+        }
+        else
+        {
+            if (distanceToWaypoint < TriggeringDistance)
+            {
+                Debug.Log("Reached the final target");
+                //Debug.Break();
+                AddScore(1000f);  // Large reward for reaching the final target
+                Debug.Log("Final score: " + ScoreManaging.Instance.score);
+                EndTheEpisode();
+            }
+        }
     }
+
 
     public override void CollectObservations(VectorSensor sensor)
     {
@@ -99,6 +137,7 @@ public class NavigatingAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
+        steps++;
         AddScore(-1f);  // Small penalty for each step
         int movement = actionBuffers.DiscreteActions[0];
         // Calculate the movement vector based on the action
@@ -114,29 +153,21 @@ public class NavigatingAgent : Agent
         body.velocity = Vector3.zero;
         body.AddForce(moveVec * moveSpeed, ForceMode.VelocityChange);
         // Calculate distance to the current waypoint
-        distanceToWaypoint = Vector3.Distance(transform.position, waypoints[currentWaypointIndex].position);
+        currentPos = transform.position;
+        distanceToWaypoint = Vector3.Distance(currentPos, targetPos);
         //
         // The distanceToWaypoint is calculated before the previousDistanceToWaypoint is updated, so at first step the score is improperly calculated
         // we don't want to calculate the reward at the first step
-        if (StepCount != 1){
+        if (StepCount != 1)
+        {
             DistanceReward();
         }
-        if (distanceToWaypoint < TriggeringDistance)
-        {
-            AddScore(200f);  // Small reward for reaching the waypoint
-            //Debug.Log("+" + 200f);
-            currentWaypointIndex++;
-
-            // If all waypoints are reached, end the episode
-            if (currentWaypointIndex == waypoints.Length)
-            {
-                AddScore(1000f);  // Large reward for reaching the final target
-                                  //Debug.Log("+" + 1000f);
-
-                EndTheEpisode();
-            }
-        }
+        CheckTriggering();
         prevDistanceToWaypoint = distanceToWaypoint;
+        if (steps >= MaxStep)
+        {
+            EndTheEpisode();
+        }
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
